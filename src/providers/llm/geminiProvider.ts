@@ -51,7 +51,8 @@ export class GeminiProvider extends BaseLLMProvider {
     if (!this.config.apiKey) return false;
 
     try {
-      const response = await fetch(`${this.baseUrl}/models?key=${this.config.apiKey}`, {
+      const response = await fetch(`${this.baseUrl}/models`, {
+        headers: { 'x-goog-api-key': this.config.apiKey },
         signal: AbortSignal.timeout(5000),
       });
       return response.ok;
@@ -66,12 +67,15 @@ export class GeminiProvider extends BaseLLMProvider {
     }
 
     const controller = this.createAbortController();
-    const url = `${this.baseUrl}/models/${this.config.model}:generateContent?key=${this.config.apiKey}`;
+    const url = `${this.baseUrl}/models/${this.config.model}:generateContent`;
 
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.config.apiKey,
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
