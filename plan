@@ -1,0 +1,258 @@
+# VS Code 에러 번역 확장 프로그램 개발 계획서
+
+## 개요
+
+TypeScript 컴파일 에러, ESLint 경고 등 VS Code Problems 패널의 진단 메시지를 로컬 LLM(Ollama)을 통해 한국어로 번역하는 VS Code 확장 프로그램 개발
+
+## 사용자 요구사항
+
+- **프로젝트 위치**: 별도 프로젝트로 생성 (esl-cms 외부)
+- **Ollama**: 이미 설치됨
+- **UX 방식**: Problems 패널 추가 + 호버 시 번역 표시 (둘 다 지원)
+
+## 기술적 가능성 검증 결과
+
+### Ollama API
+- **Base URL**: `http://localhost:11434/api`
+- **주요 엔드포인트**: `/api/generate`, `/api/chat`
+- **npm 패키지**: `ollama` (공식 JavaScript 라이브러리)
+- **장점**: 무료, 오프라인 사용, 개인정보 보호
+
+### VS Code Diagnostics API
+- `vscode.languages.getDiagnostics()` - 모든 진단 정보 조회
+- `vscode.languages.createDiagnosticCollection()` - 번역된 진단용 컬렉션 생성
+- `vscode.languages.onDidChangeDiagnostics` - 진단 변경 이벤트 구독
+
+## 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    VS Code Extension                        │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐ │
+│  │ Diagnostics │───▶│ Translation │───▶│ Translated      │ │
+│  │ Listener    │    │ Service     │    │ DiagnosticColl. │ │
+│  └─────────────┘    └──────┬──────┘    └─────────────────┘ │
+│                            │                                │
+│                     ┌──────▼──────┐                        │
+│                     │   Cache     │                        │
+│                     │  (LRU Map)  │                        │
+│                     └──────┬──────┘                        │
+└────────────────────────────┼────────────────────────────────┘
+                             │ HTTP
+                      ┌──────▼──────┐
+                      │   Ollama    │
+                      │ localhost:  │
+                      │   11434     │
+                      └─────────────┘
+```
+
+## 핵심 기능
+
+### 1. 진단 메시지 번역
+- TypeScript, ESLint, 기타 언어 서버 에러 지원
+- 원본 메시지 유지 + 번역본 추가 표시
+- 에러 코드 (TS2322, no-unused-vars 등) 보존
+
+### 2. 캐싱 시스템
+- LRU 캐시로 동일 메시지 재번역 방지
+- 파일 기반 영구 캐시 (선택적)
+- 캐시 적중률 표시
+
+### 3. 필터링
+- 원본만 / 번역만 / 둘 다 표시
+- 소스별 필터 (TypeScript, ESLint 등)
+- 심각도별 필터 (Error, Warning, Info)
+
+### 4. 설정
+- Ollama 서버 URL
+- 사용할 모델 선택 (qwen2.5, llama3.2 등)
+- 번역 언어 (기본: 한국어)
+- 자동 번역 on/off
+
+## 프로젝트 구조
+
+```
+vscode-problem-translator/
+├── package.json
+├── tsconfig.json
+├── esbuild.config.js
+├── src/
+│   ├── extension.ts              # 진입점
+│   ├── services/
+│   │   ├── ollamaService.ts      # Ollama API 클라이언트
+│   │   ├── translationService.ts
+│   │   └── cacheService.ts
+│   ├── providers/
+│   │   ├── diagnosticsProvider.ts # Problems 패널 번역
+│   │   └── hoverProvider.ts       # 호버 시 번역 표시
+│   ├── commands/
+│   │   ├── translateCommand.ts
+│   │   └── toggleCommand.ts
+│   ├── config/
+│   │   └── settings.ts
+│   └── utils/
+│       └── debounce.ts
+├── test/
+│   └── extension.test.ts
+└── README.md
+```
+
+## 구현 단계
+
+### Phase 1: 프로젝트 설정 (기반 구축)
+- [ ] VS Code Extension 프로젝트 생성 (Yeoman generator)
+- [ ] TypeScript, esbuild 설정
+- [ ] 기본 extension.ts 구조 작성
+- [ ] package.json에 contributes (commands, configuration) 정의
+
+### Phase 2: Ollama 연동
+- [ ] OllamaService 클래스 구현
+- [ ] 연결 상태 확인 기능
+- [ ] 번역 프롬프트 설계
+- [ ] 스트리밍 응답 처리
+
+### Phase 3: 진단 처리
+- [ ] DiagnosticsProvider 구현
+- [ ] 기존 진단 수집 (onDidChangeDiagnostics)
+- [ ] 번역된 진단 컬렉션 생성
+- [ ] 원본-번역 매핑 관리
+
+### Phase 4: 캐싱
+- [ ] LRU 캐시 구현
+- [ ] 캐시 키 생성 (메시지 해시)
+- [ ] 영구 저장소 연동 (globalState)
+
+### Phase 5: 호버 번역
+- [ ] HoverProvider 구현
+- [ ] 에러 라인에서 호버 시 번역 팝업 표시
+- [ ] 원본 + 번역 + 해결 힌트 표시
+
+### Phase 6: UI/UX
+- [ ] 상태 표시줄 아이템 (번역 상태, 캐시 적중률)
+- [ ] 설정 페이지 (Problems vs Hover vs 둘 다)
+- [ ] 토글 명령어
+
+### Phase 7: 테스트 및 배포
+- [ ] 단위 테스트 작성
+- [ ] 통합 테스트
+- [ ] VSIX 패키징
+- [ ] Marketplace 배포 (선택)
+
+## 핵심 코드 스니펫
+
+### OllamaService
+```typescript
+export class OllamaService {
+  private baseUrl: string;
+  private model: string;
+
+  async translate(message: string): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: this.model,
+        prompt: `다음 프로그래밍 에러 메시지를 한국어로 번역해주세요. 기술 용어는 영어로 유지하고, 간결하게 번역하세요:\n\n"${message}"`,
+        stream: false
+      })
+    });
+    const data = await response.json();
+    return data.response;
+  }
+}
+```
+
+### DiagnosticsProvider
+```typescript
+export class DiagnosticsProvider {
+  private translatedCollection: vscode.DiagnosticCollection;
+
+  constructor() {
+    this.translatedCollection = vscode.languages.createDiagnosticCollection('translated');
+
+    vscode.languages.onDidChangeDiagnostics(async (e) => {
+      for (const uri of e.uris) {
+        await this.translateDiagnostics(uri);
+      }
+    });
+  }
+
+  private async translateDiagnostics(uri: vscode.Uri) {
+    const diagnostics = vscode.languages.getDiagnostics(uri);
+    const translated = await Promise.all(
+      diagnostics.map(d => this.translateOne(d))
+    );
+    this.translatedCollection.set(uri, translated);
+  }
+}
+```
+
+### HoverProvider
+```typescript
+export class TranslatedHoverProvider implements vscode.HoverProvider {
+  async provideHover(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ): Promise<vscode.Hover | undefined> {
+    const diagnostics = vscode.languages.getDiagnostics(document.uri);
+    const diagnostic = diagnostics.find(d => d.range.contains(position));
+
+    if (!diagnostic) return undefined;
+
+    const translated = await this.translationService.translate(diagnostic.message);
+
+    const content = new vscode.MarkdownString();
+    content.appendMarkdown(`**원본**: ${diagnostic.message}\n\n`);
+    content.appendMarkdown(`**번역**: ${translated}\n`);
+
+    return new vscode.Hover(content, diagnostic.range);
+  }
+}
+```
+
+## 권장 모델
+
+| 모델 | 크기 | 속도 | 번역 품질 | 권장 용도 |
+|------|------|------|----------|----------|
+| qwen2.5:3b | 2GB | 빠름 | 양호 | 일반 사용 |
+| llama3.2:3b | 2GB | 빠름 | 양호 | 일반 사용 |
+| qwen2.5:7b | 4.5GB | 보통 | 우수 | 고품질 필요 시 |
+
+## 검증 방법
+
+1. **Ollama 설치 및 모델 다운로드**
+   ```bash
+   ollama pull qwen2.5:3b
+   ollama serve
+   ```
+
+2. **확장 프로그램 테스트**
+   - F5로 Extension Development Host 실행
+   - TypeScript 에러가 있는 파일 열기
+   - Problems 패널에서 번역 확인
+
+3. **성능 테스트**
+   - 100개 이상의 에러가 있는 프로젝트에서 테스트
+   - 캐시 적중률 및 응답 시간 측정
+
+## 예상 결과물
+
+```
+┌─ PROBLEMS ───────────────────────────────────────────────┐
+│ ❌ main.ts                                               │
+│   [TS2322] Type 'string' is not assignable to 'number'  │
+│   🌐 [TS2322] 'string' 타입은 'number'에 할당할 수 없습니다 │
+│                                                          │
+│ ⚠️ utils.ts                                              │
+│   [no-unused-vars] 'foo' is defined but never used      │
+│   🌐 [no-unused-vars] 'foo'가 정의되었지만 사용되지 않음   │
+└──────────────────────────────────────────────────────────┘
+```
+
+## 참고 자료
+
+- [Ollama VS Code Integration](https://docs.ollama.com/integrations/vscode)
+- [VS Code Extension API](https://code.visualstudio.com/api/references/vscode-api)
+- [Microsoft vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples)
+- [Building VS Code Extensions Guide](https://abdulkadersafi.com/blog/building-vs-code-extensions-in-2026-the-complete-modern-guide)

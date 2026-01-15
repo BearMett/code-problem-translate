@@ -1,0 +1,170 @@
+{
+  "name": "vscode-problem-translator",
+  "displayName": "Problem Translator",
+  "description": "VS Code Problems 패널의 에러 메시지를 로컬 LLM(Ollama)을 통해 한국어로 번역합니다",
+  "version": "0.0.1",
+  "publisher": "problem-translator",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "translator",
+    "korean",
+    "ollama",
+    "diagnostics",
+    "error translation"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "problemTranslator.translateAll",
+        "title": "Problem Translator: Translate All Problems"
+      },
+      {
+        "command": "problemTranslator.toggle",
+        "title": "Problem Translator: Toggle Translation"
+      },
+      {
+        "command": "problemTranslator.clearCache",
+        "title": "Problem Translator: Clear Translation Cache"
+      },
+      {
+        "command": "problemTranslator.showStatus",
+        "title": "Problem Translator: Show Status"
+      }
+    ],
+    "configuration": {
+      "title": "Problem Translator",
+      "properties": {
+        "problemTranslator.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable automatic translation"
+        },
+        "problemTranslator.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server URL"
+        },
+        "problemTranslator.model": {
+          "type": "string",
+          "default": "qwen2.5:3b",
+          "description": "Ollama model to use for translation. Recommended: qwen2.5:3b (fast), qwen2.5:7b (quality), llama3.2:3b, gemma2:2b. You can enter any model installed in Ollama.",
+          "examples": [
+            "qwen2.5:3b",
+            "qwen2.5:7b",
+            "llama3.2:3b",
+            "llama3.2:7b",
+            "gemma2:2b",
+            "gemma2:9b",
+            "mistral:7b",
+            "phi3:mini"
+          ]
+        },
+        "problemTranslator.targetLanguage": {
+          "type": "string",
+          "default": "Korean",
+          "description": "Target language for translation"
+        },
+        "problemTranslator.displayMode": {
+          "type": "string",
+          "default": "both",
+          "enum": [
+            "original",
+            "translated",
+            "both"
+          ],
+          "enumDescriptions": [
+            "Show only original messages",
+            "Show only translated messages",
+            "Show both original and translated messages"
+          ],
+          "description": "How to display diagnostic messages"
+        },
+        "problemTranslator.enableHover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show translation in hover tooltip"
+        },
+        "problemTranslator.enableProblemsPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show translated diagnostics in Problems panel"
+        },
+        "problemTranslator.cacheEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable translation caching"
+        },
+        "problemTranslator.cacheMaxSize": {
+          "type": "number",
+          "default": 1000,
+          "description": "Maximum number of cached translations"
+        },
+        "problemTranslator.debounceDelay": {
+          "type": "number",
+          "default": 500,
+          "description": "Delay in milliseconds before translating after diagnostics change"
+        },
+        "problemTranslator.sources": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Filter by diagnostic sources (e.g., ['ts', 'eslint']). Empty means all sources."
+        },
+        "problemTranslator.severities": {
+          "type": "array",
+          "default": [
+            "Error",
+            "Warning",
+            "Information",
+            "Hint"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "Error",
+              "Warning",
+              "Information",
+              "Hint"
+            ]
+          },
+          "description": "Filter by diagnostic severity"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.8",
+    "esbuild": "^0.19.8",
+    "eslint": "^8.55.0",
+    "typescript": "^5.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "license": "MIT"
+}
