@@ -90,8 +90,18 @@
         },
         "problemTranslator.openai.model": {
           "type": "string",
-          "default": "gpt-4o-mini",
-          "enum": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+          "default": "gpt-5-nano",
+          "enum": ["gpt-5.2", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4o-mini"],
+          "enumDescriptions": [
+            "GPT-5.2 - Most capable, reasoning model",
+            "GPT-5 mini - Fast, well-defined tasks",
+            "GPT-5 nano - Cheapest, translation/summarization (Recommended)",
+            "GPT-4.1 - Non-reasoning flagship, 1M context",
+            "GPT-4.1 mini - Fast & efficient",
+            "GPT-4.1 nano - Fastest in 4.1 series",
+            "GPT-4o - Multimodal (audio/vision)",
+            "GPT-4o mini - Multimodal, smaller"
+          ],
           "description": "OpenAI model for translation"
         },
         "problemTranslator.openai.baseUrl": {
@@ -111,13 +121,13 @@
         },
         "problemTranslator.claude.model": {
           "type": "string",
-          "default": "claude-3-haiku-20240307",
-          "enum": ["claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-3-haiku-20240307", "claude-3-opus-20240229"],
+          "default": "claude-haiku-4-5-20251001",
+          "enum": ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250929", "claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022"],
           "enumDescriptions": [
-            "Claude Sonnet 4 - Latest balanced model",
-            "Claude 3.5 Sonnet - Fast and capable",
-            "Claude 3 Haiku - Fastest, most affordable",
-            "Claude 3 Opus - Most capable"
+            "Claude Haiku 4.5 - Fastest, most affordable",
+            "Claude Sonnet 4.5 - Best balance of speed & capability",
+            "Claude 3.5 Haiku - Previous fast model",
+            "Claude 3.5 Sonnet - Previous balanced model"
           ],
           "description": "Claude model for translation"
         },
@@ -128,12 +138,11 @@
         },
         "problemTranslator.gemini.model": {
           "type": "string",
-          "default": "gemini-1.5-flash",
-          "enum": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"],
+          "default": "gemini-2.5-flash",
+          "enum": ["gemini-2.5-flash", "gemini-2.5-pro"],
           "enumDescriptions": [
-            "Gemini 1.5 Flash - Fast and efficient",
-            "Gemini 1.5 Pro - More capable",
-            "Gemini 2.0 Flash (Experimental) - Latest experimental"
+            "Gemini 2.5 Flash - Fast, best price-performance (Recommended)",
+            "Gemini 2.5 Pro - Most advanced reasoning"
           ],
           "description": "Gemini model for translation"
         },

@@ -31,7 +31,7 @@ export class OpenAIProvider extends BaseLLMProvider {
     super();
     this.config = {
       apiKey: config.apiKey || '',
-      model: config.model || 'gpt-4o-mini',
+      model: config.model || 'gpt-5-nano',
       baseUrl: config.baseUrl || 'https://api.openai.com/v1',
       organization: config.organization,
     };
