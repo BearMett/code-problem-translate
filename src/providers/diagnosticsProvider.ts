@@ -16,6 +16,12 @@ export class DiagnosticsProvider implements vscode.Disposable {
   private translationMap: Map<string, Map<string, TranslatedDiagnostic>> = new Map();
   private debouncedTranslate: (uri: vscode.Uri) => void;
 
+  // Fingerprint of last processed diagnostics per URI (to detect actual changes)
+  private lastDiagnosticsFingerprint: Map<string, string> = new Map();
+
+  // Track which original messages we've already translated for each URI
+  private translatedMessages: Map<string, Set<string>> = new Map();
+
   constructor(translationService: TranslationService) {
     this.translationService = translationService;
     this.settings = getSettings();
@@ -33,6 +39,7 @@ export class DiagnosticsProvider implements vscode.Disposable {
         if (!this.settings.enabled || !this.settings.enableProblemsPanel) {
           return;
         }
+
         for (const uri of e.uris) {
           this.debouncedTranslate(uri);
         }
@@ -50,6 +57,8 @@ export class DiagnosticsProvider implements vscode.Disposable {
     if (!settings.enabled || !settings.enableProblemsPanel) {
       this.translatedCollection.clear();
       this.translationMap.clear();
+      this.lastDiagnosticsFingerprint.clear();
+      this.translatedMessages.clear();
     }
   }
 
@@ -57,28 +66,46 @@ export class DiagnosticsProvider implements vscode.Disposable {
     const allDiagnostics = vscode.languages.getDiagnostics();
 
     for (const [uri] of allDiagnostics) {
-      await this.translateDiagnosticsForUri(uri);
+      await this.translateDiagnosticsForUri(uri, true); // force=true
     }
   }
 
-  private async translateDiagnosticsForUri(uri: vscode.Uri): Promise<void> {
+  private async translateDiagnosticsForUri(uri: vscode.Uri, force: boolean = false): Promise<void> {
     if (!this.settings.enabled || !this.settings.enableProblemsPanel) {
       return;
     }
 
-    const diagnostics = vscode.languages.getDiagnostics(uri);
-    const filteredDiagnostics = this.filterDiagnostics(diagnostics);
+    const uriString = uri.toString();
 
-    if (filteredDiagnostics.length === 0) {
+    // Get ALL diagnostics for this URI
+    const allDiagnostics = vscode.languages.getDiagnostics(uri);
+
+    // Filter to only original (non-translated) diagnostics
+    const originalDiagnostics = this.filterOriginalDiagnostics(allDiagnostics);
+
+    // Create fingerprint of original diagnostics
+    const fingerprint = this.createFingerprint(originalDiagnostics);
+
+    // Skip if nothing changed (unless forced)
+    if (!force && this.lastDiagnosticsFingerprint.get(uriString) === fingerprint) {
+      return;
+    }
+
+    // Update fingerprint
+    this.lastDiagnosticsFingerprint.set(uriString, fingerprint);
+
+    if (originalDiagnostics.length === 0) {
       this.translatedCollection.delete(uri);
-      this.translationMap.delete(uri.toString());
+      this.translationMap.delete(uriString);
+      this.translatedMessages.delete(uriString);
       return;
     }
 
     const uriMap = new Map<string, TranslatedDiagnostic>();
     const translatedDiagnostics: vscode.Diagnostic[] = [];
+    const newTranslatedMessages = new Set<string>();
 
-    for (const diagnostic of filteredDiagnostics) {
+    for (const diagnostic of originalDiagnostics) {
       try {
         const result = await this.translationService.translate(diagnostic.message);
 
@@ -89,6 +116,8 @@ export class DiagnosticsProvider implements vscode.Disposable {
           original: diagnostic,
           translatedMessage: result.translated,
         });
+
+        newTranslatedMessages.add(diagnostic.message);
       } catch (error) {
         console.error('Failed to translate diagnostic:', error);
         // Keep original if translation fails
@@ -96,12 +125,21 @@ export class DiagnosticsProvider implements vscode.Disposable {
       }
     }
 
-    this.translationMap.set(uri.toString(), uriMap);
+    this.translationMap.set(uriString, uriMap);
+    this.translatedMessages.set(uriString, newTranslatedMessages);
     this.translatedCollection.set(uri, translatedDiagnostics);
   }
 
-  private filterDiagnostics(diagnostics: readonly vscode.Diagnostic[]): vscode.Diagnostic[] {
+  /**
+   * Filter to get only original (non-translated) diagnostics
+   */
+  private filterOriginalDiagnostics(diagnostics: readonly vscode.Diagnostic[]): vscode.Diagnostic[] {
     return diagnostics.filter(d => {
+      // Skip diagnostics from our own collection
+      if (this.isOurDiagnostic(d)) {
+        return false;
+      }
+
       // Filter by source
       if (this.settings.sources.length > 0 && d.source) {
         if (!this.settings.sources.some(s => d.source?.toLowerCase().includes(s.toLowerCase()))) {
@@ -117,6 +155,39 @@ export class DiagnosticsProvider implements vscode.Disposable {
 
       return true;
     });
+  }
+
+  /**
+   * Check if a diagnostic was created by this extension
+   */
+  private isOurDiagnostic(diagnostic: vscode.Diagnostic): boolean {
+    // Primary check: source marker
+    if (diagnostic.source?.includes('(translated)')) {
+      return true;
+    }
+    if (diagnostic.source === 'translated') {
+      return true;
+    }
+    if (diagnostic.source === 'problem-translator') {
+      return true;
+    }
+
+    // Secondary check: message contains our marker
+    if (diagnostic.message.includes('🌐 ')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Create a fingerprint of diagnostics to detect changes
+   */
+  private createFingerprint(diagnostics: vscode.Diagnostic[]): string {
+    const parts = diagnostics.map(d =>
+      `${d.range.start.line}:${d.range.start.character}:${d.severity}:${d.source}:${d.message}`
+    ).sort();
+    return parts.join('|||');
   }
 
   private getSeverityName(severity: vscode.DiagnosticSeverity): string {
@@ -182,6 +253,8 @@ export class DiagnosticsProvider implements vscode.Disposable {
   clear(): void {
     this.translatedCollection.clear();
     this.translationMap.clear();
+    this.lastDiagnosticsFingerprint.clear();
+    this.translatedMessages.clear();
   }
 
   dispose(): void {

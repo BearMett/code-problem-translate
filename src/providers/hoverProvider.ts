@@ -26,7 +26,9 @@ export class TranslatedHoverProvider implements vscode.HoverProvider {
     }
 
     const diagnostics = vscode.languages.getDiagnostics(document.uri);
-    const diagnosticAtPosition = diagnostics.find(d => d.range.contains(position));
+    const diagnosticAtPosition = diagnostics.find(d =>
+      d.range.contains(position) && !this.isTranslatedDiagnostic(d)
+    );
 
     if (!diagnosticAtPosition) {
       return undefined;
@@ -101,5 +103,21 @@ export class TranslatedHoverProvider implements vscode.HoverProvider {
 
   clearCache(): void {
     this.translationCache.clear();
+  }
+
+  /**
+   * Check if a diagnostic was created by the translator (circular reference prevention)
+   */
+  private isTranslatedDiagnostic(diagnostic: vscode.Diagnostic): boolean {
+    if (diagnostic.source?.includes('(translated)')) {
+      return true;
+    }
+    if (diagnostic.source === 'translated') {
+      return true;
+    }
+    if (diagnostic.message.includes('🌐 ')) {
+      return true;
+    }
+    return false;
   }
 }
