@@ -10,17 +10,47 @@ export function registerTranslateCommand(
   const translateAllCommand = vscode.commands.registerCommand(
     'problemTranslator.translateAll',
     async () => {
-      const isConnected = await translationService.checkOllamaConnection();
+      const providerInfo = translationService.getProviderInfo();
+
+      if (!providerInfo.isConfigured) {
+        const settingsKey =
+          providerInfo.name === 'custom'
+            ? 'problemTranslator.custom.url'
+            : `problemTranslator.${providerInfo.name}.apiKey`;
+
+        vscode.window
+          .showErrorMessage(
+            `Problem Translator: ${providerInfo.displayName} is not configured.`,
+            'Open Settings'
+          )
+          .then((selection) => {
+            if (selection === 'Open Settings') {
+              vscode.commands.executeCommand('workbench.action.openSettings', settingsKey);
+            }
+          });
+        return;
+      }
+
+      const isConnected = await translationService.checkConnection();
 
       if (!isConnected) {
-        vscode.window.showErrorMessage(
-          'Problem Translator: Cannot connect to Ollama. Please ensure Ollama is running.',
-          'Open Settings'
-        ).then(selection => {
-          if (selection === 'Open Settings') {
-            vscode.commands.executeCommand('workbench.action.openSettings', 'problemTranslator.ollamaUrl');
-          }
-        });
+        const settingsKey =
+          providerInfo.name === 'ollama'
+            ? 'problemTranslator.ollama.url'
+            : providerInfo.name === 'custom'
+              ? 'problemTranslator.custom.url'
+              : `problemTranslator.${providerInfo.name}.apiKey`;
+
+        vscode.window
+          .showErrorMessage(
+            `Problem Translator: Cannot connect to ${providerInfo.displayName}.`,
+            'Open Settings'
+          )
+          .then((selection) => {
+            if (selection === 'Open Settings') {
+              vscode.commands.executeCommand('workbench.action.openSettings', settingsKey);
+            }
+          });
         return;
       }
 
@@ -35,11 +65,13 @@ export function registerTranslateCommand(
             translationService.cancelPendingTranslations();
           });
 
-          progress.report({ message: 'Translating diagnostics...' });
+          progress.report({ message: `Translating diagnostics with ${providerInfo.displayName}...` });
 
           try {
             await diagnosticsProvider.translateAllDiagnostics();
-            vscode.window.showInformationMessage('Problem Translator: All diagnostics translated successfully.');
+            vscode.window.showInformationMessage(
+              'Problem Translator: All diagnostics translated successfully.'
+            );
           } catch (error) {
             vscode.window.showErrorMessage(
               `Problem Translator: Translation failed - ${error instanceof Error ? error.message : 'Unknown error'}`

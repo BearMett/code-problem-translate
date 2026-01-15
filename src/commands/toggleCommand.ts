@@ -53,15 +53,23 @@ export function registerShowStatusCommand(
   const showStatusCommand = vscode.commands.registerCommand(
     'problemTranslator.showStatus',
     async () => {
-      const isConnected = await translationService.checkOllamaConnection();
+      const providerInfo = translationService.getProviderInfo();
+      const isConnected = await translationService.checkConnection();
       const settings = getSettings();
       const cacheStats = translationService.getCacheStats();
       const hitRate = translationService.getCacheHitRate();
 
+      // Get provider-specific config
+      const providerConfig = settings[settings.provider];
+      const modelName =
+        'model' in providerConfig ? (providerConfig as { model: string }).model : 'N/A';
+
       const statusItems = [
-        `Ollama Connection: ${isConnected ? '✅ Connected' : '❌ Disconnected'}`,
-        `Server URL: ${settings.ollamaUrl}`,
-        `Model: ${settings.model}`,
+        `Provider: ${providerInfo.displayName}`,
+        `Connection: ${isConnected ? '✅ Connected' : '❌ Disconnected'}`,
+        `Configured: ${providerInfo.isConfigured ? 'Yes' : 'No'}`,
+        `Model: ${modelName}`,
+        `Target Language: ${settings.targetLanguage}`,
         `Translation Enabled: ${settings.enabled ? 'Yes' : 'No'}`,
         `Hover Enabled: ${settings.enableHover ? 'Yes' : 'No'}`,
         `Problems Panel Enabled: ${settings.enableProblemsPanel ? 'Yes' : 'No'}`,
@@ -72,7 +80,7 @@ export function registerShowStatusCommand(
       const panel = vscode.window.createOutputChannel('Problem Translator Status');
       panel.clear();
       panel.appendLine('=== Problem Translator Status ===\n');
-      statusItems.forEach(item => panel.appendLine(item));
+      statusItems.forEach((item) => panel.appendLine(item));
       panel.show();
     }
   );

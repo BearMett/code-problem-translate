@@ -1,8 +1,8 @@
 {
   "name": "vscode-problem-translator",
   "displayName": "Problem Translator",
-  "description": "VS Code Problems 패널의 에러 메시지를 로컬 LLM(Ollama)을 통해 한국어로 번역합니다",
-  "version": "0.0.1",
+  "description": "VS Code Problems 패널의 에러 메시지를 다양한 LLM(Ollama, OpenAI, Claude, Gemini)을 통해 번역합니다",
+  "version": "0.1.0",
   "publisher": "problem-translator",
   "engines": {
     "vscode": "^1.85.0"
@@ -15,8 +15,12 @@
     "translator",
     "korean",
     "ollama",
+    "openai",
+    "claude",
+    "gemini",
     "diagnostics",
-    "error translation"
+    "error translation",
+    "llm"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -49,25 +53,131 @@
           "default": true,
           "description": "Enable/disable automatic translation"
         },
-        "problemTranslator.ollamaUrl": {
+        "problemTranslator.provider": {
+          "type": "string",
+          "default": "ollama",
+          "enum": ["ollama", "openai", "claude", "gemini", "custom"],
+          "enumDescriptions": [
+            "Ollama (Local LLM) - Free, runs locally",
+            "OpenAI (GPT-4o, GPT-4o-mini) - Requires API key",
+            "Claude (Anthropic) - Requires API key",
+            "Gemini (Google) - Requires API key",
+            "Custom URL endpoint - For self-hosted or other APIs"
+          ],
+          "description": "Select the LLM provider for translations"
+        },
+        "problemTranslator.ollama.url": {
           "type": "string",
           "default": "http://localhost:11434",
           "description": "Ollama server URL"
         },
-        "problemTranslator.model": {
+        "problemTranslator.ollama.model": {
           "type": "string",
           "default": "qwen2.5:3b",
-          "description": "Ollama model to use for translation. Recommended: qwen2.5:3b (fast), qwen2.5:7b (quality), llama3.2:3b, gemma2:2b. You can enter any model installed in Ollama.",
+          "description": "Ollama model for translation",
           "examples": [
             "qwen2.5:3b",
             "qwen2.5:7b",
             "llama3.2:3b",
-            "llama3.2:7b",
             "gemma2:2b",
-            "gemma2:9b",
-            "mistral:7b",
-            "phi3:mini"
+            "mistral:7b"
           ]
+        },
+        "problemTranslator.openai.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API key"
+        },
+        "problemTranslator.openai.model": {
+          "type": "string",
+          "default": "gpt-4o-mini",
+          "enum": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+          "description": "OpenAI model for translation"
+        },
+        "problemTranslator.openai.baseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "OpenAI API base URL (for Azure OpenAI or proxies)"
+        },
+        "problemTranslator.openai.organization": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI organization ID (optional)"
+        },
+        "problemTranslator.claude.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic Claude API key"
+        },
+        "problemTranslator.claude.model": {
+          "type": "string",
+          "default": "claude-3-haiku-20240307",
+          "enum": ["claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-3-haiku-20240307", "claude-3-opus-20240229"],
+          "enumDescriptions": [
+            "Claude Sonnet 4 - Latest balanced model",
+            "Claude 3.5 Sonnet - Fast and capable",
+            "Claude 3 Haiku - Fastest, most affordable",
+            "Claude 3 Opus - Most capable"
+          ],
+          "description": "Claude model for translation"
+        },
+        "problemTranslator.gemini.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Google Gemini API key"
+        },
+        "problemTranslator.gemini.model": {
+          "type": "string",
+          "default": "gemini-1.5-flash",
+          "enum": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"],
+          "enumDescriptions": [
+            "Gemini 1.5 Flash - Fast and efficient",
+            "Gemini 1.5 Pro - More capable",
+            "Gemini 2.0 Flash (Experimental) - Latest experimental"
+          ],
+          "description": "Gemini model for translation"
+        },
+        "problemTranslator.custom.url": {
+          "type": "string",
+          "default": "",
+          "description": "Custom LLM endpoint URL"
+        },
+        "problemTranslator.custom.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for custom endpoint (optional)"
+        },
+        "problemTranslator.custom.model": {
+          "type": "string",
+          "default": "",
+          "description": "Model name for custom endpoint"
+        },
+        "problemTranslator.custom.requestFormat": {
+          "type": "string",
+          "default": "openai",
+          "enum": ["openai", "ollama"],
+          "enumDescriptions": [
+            "OpenAI-compatible API format (chat/completions)",
+            "Ollama-compatible API format (api/generate)"
+          ],
+          "description": "Request format for custom endpoint"
+        },
+        "problemTranslator.custom.headers": {
+          "type": "object",
+          "default": {},
+          "description": "Additional HTTP headers for custom endpoint"
+        },
+        "problemTranslator.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "(Deprecated) Use problemTranslator.ollama.url instead",
+          "deprecationMessage": "Use problemTranslator.ollama.url instead"
+        },
+        "problemTranslator.model": {
+          "type": "string",
+          "default": "qwen2.5:3b",
+          "description": "(Deprecated) Use provider-specific model settings instead",
+          "deprecationMessage": "Use problemTranslator.ollama.model, problemTranslator.openai.model, etc. instead"
         },
         "problemTranslator.targetLanguage": {
           "type": "string",

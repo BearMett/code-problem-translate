@@ -3,7 +3,11 @@ import { TranslationService } from './services/translationService.js';
 import { DiagnosticsProvider } from './providers/diagnosticsProvider.js';
 import { TranslatedHoverProvider } from './providers/hoverProvider.js';
 import { registerTranslateCommand } from './commands/translateCommand.js';
-import { registerToggleCommand, registerClearCacheCommand, registerShowStatusCommand } from './commands/toggleCommand.js';
+import {
+  registerToggleCommand,
+  registerClearCacheCommand,
+  registerShowStatusCommand,
+} from './commands/toggleCommand.js';
 import { getSettings, onSettingsChanged } from './config/settings.js';
 
 let translationService: TranslationService;
@@ -43,7 +47,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   await updateStatusBar();
 
   // Listen for settings changes
-  const settingsDisposable = onSettingsChanged(settings => {
+  const settingsDisposable = onSettingsChanged((settings) => {
     translationService.updateSettings(settings);
     diagnosticsProvider.updateSettings(settings);
     hoverProvider.updateSettings(settings);
@@ -65,25 +69,81 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     },
   });
 
-  // Check Ollama connection on startup
+  // Check provider connection on startup
   const settings = getSettings();
   if (settings.enabled) {
-    const isConnected = await translationService.checkOllamaConnection();
-    if (!isConnected) {
-      vscode.window.showWarningMessage(
-        'Problem Translator: Cannot connect to Ollama. Please ensure Ollama is running.',
-        'Open Settings',
-        'Dismiss'
-      ).then(selection => {
-        if (selection === 'Open Settings') {
-          vscode.commands.executeCommand('workbench.action.openSettings', 'problemTranslator.ollamaUrl');
-        }
-      });
+    const providerInfo = translationService.getProviderInfo();
+
+    if (!providerInfo.isConfigured) {
+      showProviderConfigWarning(providerInfo.name, providerInfo.displayName);
     } else {
-      // Translate existing diagnostics on startup
-      await diagnosticsProvider.translateAllDiagnostics();
+      const isConnected = await translationService.checkConnection();
+      if (!isConnected) {
+        showConnectionWarning(providerInfo.name, providerInfo.displayName);
+      } else {
+        // Translate existing diagnostics on startup
+        await diagnosticsProvider.translateAllDiagnostics();
+      }
     }
   }
+}
+
+function showProviderConfigWarning(providerName: string, displayName: string): void {
+  const requiresApiKey = ['openai', 'claude', 'gemini'].includes(providerName);
+
+  if (requiresApiKey) {
+    vscode.window
+      .showWarningMessage(
+        `Problem Translator: ${displayName} API key is not configured.`,
+        'Open Settings',
+        'Dismiss'
+      )
+      .then((selection) => {
+        if (selection === 'Open Settings') {
+          vscode.commands.executeCommand(
+            'workbench.action.openSettings',
+            `problemTranslator.${providerName}.apiKey`
+          );
+        }
+      });
+  } else if (providerName === 'custom') {
+    vscode.window
+      .showWarningMessage(
+        'Problem Translator: Custom endpoint URL is not configured.',
+        'Open Settings',
+        'Dismiss'
+      )
+      .then((selection) => {
+        if (selection === 'Open Settings') {
+          vscode.commands.executeCommand(
+            'workbench.action.openSettings',
+            'problemTranslator.custom.url'
+          );
+        }
+      });
+  }
+}
+
+function showConnectionWarning(providerName: string, displayName: string): void {
+  let message: string;
+  let settingsKey: string;
+
+  if (providerName === 'ollama') {
+    message = `Problem Translator: Cannot connect to Ollama. Please ensure Ollama is running.`;
+    settingsKey = 'problemTranslator.ollama.url';
+  } else if (providerName === 'custom') {
+    message = `Problem Translator: Cannot connect to custom endpoint.`;
+    settingsKey = 'problemTranslator.custom.url';
+  } else {
+    message = `Problem Translator: Cannot connect to ${displayName}. Please check your API key.`;
+    settingsKey = `problemTranslator.${providerName}.apiKey`;
+  }
+
+  vscode.window.showWarningMessage(message, 'Open Settings', 'Dismiss').then((selection) => {
+    if (selection === 'Open Settings') {
+      vscode.commands.executeCommand('workbench.action.openSettings', settingsKey);
+    }
+  });
 }
 
 async function updateStatusBar(): Promise<void> {
@@ -94,21 +154,43 @@ async function updateStatusBar(): Promise<void> {
     statusBarItem.tooltip = 'Problem Translator is disabled';
     statusBarItem.backgroundColor = undefined;
   } else {
-    const isConnected = await translationService.checkOllamaConnection();
+    const providerInfo = translationService.getProviderInfo();
     const hitRate = translationService.getCacheHitRate();
 
-    if (isConnected) {
-      statusBarItem.text = `$(globe) PT: ${hitRate.toFixed(0)}%`;
-      statusBarItem.tooltip = `Problem Translator - Cache hit rate: ${hitRate.toFixed(1)}%\nClick for status`;
-      statusBarItem.backgroundColor = undefined;
-    } else {
-      statusBarItem.text = '$(warning) PT: Offline';
-      statusBarItem.tooltip = 'Problem Translator - Ollama not connected';
+    // Short provider name for status bar
+    const providerShort = getProviderShortName(providerInfo.name);
+
+    if (!providerInfo.isConfigured) {
+      statusBarItem.text = `$(warning) PT: ${providerShort} Not Configured`;
+      statusBarItem.tooltip = `Problem Translator - ${providerInfo.displayName} is not configured`;
       statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+    } else {
+      const isConnected = await translationService.checkConnection();
+
+      if (isConnected) {
+        statusBarItem.text = `$(globe) PT: ${providerShort} ${hitRate.toFixed(0)}%`;
+        statusBarItem.tooltip = `Problem Translator\nProvider: ${providerInfo.displayName}\nCache hit rate: ${hitRate.toFixed(1)}%\nClick for status`;
+        statusBarItem.backgroundColor = undefined;
+      } else {
+        statusBarItem.text = `$(warning) PT: ${providerShort} Offline`;
+        statusBarItem.tooltip = `Problem Translator - ${providerInfo.displayName} not connected`;
+        statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+      }
     }
   }
 
   statusBarItem.show();
+}
+
+function getProviderShortName(providerName: string): string {
+  const shortNames: Record<string, string> = {
+    ollama: 'Ollama',
+    openai: 'GPT',
+    claude: 'Claude',
+    gemini: 'Gemini',
+    custom: 'Custom',
+  };
+  return shortNames[providerName] || providerName;
 }
 
 export function deactivate(): void {

@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
-import { OllamaService } from './ollamaService.js';
+import { LLMProvider } from '../providers/llm/types.js';
+import { LLMProviderFactory } from '../providers/llm/providerFactory.js';
 import { CacheService } from './cacheService.js';
-import { getSettings, ExtensionSettings } from '../config/settings.js';
+import { getSettings, getCurrentProviderConfig, ExtensionSettings } from '../config/settings.js';
 
 export interface TranslationResult {
   original: string;
@@ -10,7 +11,7 @@ export interface TranslationResult {
 }
 
 export class TranslationService {
-  private ollamaService: OllamaService;
+  private provider: LLMProvider;
   private cacheService: CacheService;
   private settings: ExtensionSettings;
   private pendingTranslations: Map<string, Promise<string>> = new Map();
@@ -20,7 +21,10 @@ export class TranslationService {
 
   constructor() {
     this.settings = getSettings();
-    this.ollamaService = new OllamaService(this.settings.ollamaUrl, this.settings.model);
+    this.provider = LLMProviderFactory.createProvider(
+      this.settings.provider,
+      getCurrentProviderConfig(this.settings)
+    );
     this.cacheService = new CacheService(this.settings.cacheMaxSize);
   }
 
@@ -30,13 +34,26 @@ export class TranslationService {
 
   updateSettings(settings: ExtensionSettings): void {
     this.settings = settings;
-    this.ollamaService.setBaseUrl(settings.ollamaUrl);
-    this.ollamaService.setModel(settings.model);
+
+    // Update or create provider
+    this.provider = LLMProviderFactory.createProvider(
+      settings.provider,
+      getCurrentProviderConfig(settings)
+    );
+
     this.cacheService.setMaxSize(settings.cacheMaxSize);
   }
 
-  async checkOllamaConnection(): Promise<boolean> {
-    return this.ollamaService.checkConnection();
+  async checkConnection(): Promise<boolean> {
+    return this.provider.checkConnection();
+  }
+
+  getProviderInfo(): { name: string; displayName: string; isConfigured: boolean } {
+    return {
+      name: this.provider.name,
+      displayName: this.provider.displayName,
+      isConfigured: this.provider.isConfigured(),
+    };
   }
 
   async translate(message: string): Promise<TranslationResult> {
@@ -85,7 +102,7 @@ export class TranslationService {
 
   private async performTranslation(message: string): Promise<string> {
     try {
-      const translated = await this.ollamaService.translate(message, this.settings.targetLanguage);
+      const translated = await this.provider.translate(message, this.settings.targetLanguage);
 
       // Cache the result
       if (this.settings.cacheEnabled) {
@@ -112,11 +129,13 @@ export class TranslationService {
 
     for (const chunk of chunks) {
       const chunkResults = await Promise.all(
-        chunk.map(msg => this.translate(msg).catch(error => ({
-          original: msg,
-          translated: `[Translation failed: ${error.message}]`,
-          fromCache: false,
-        })))
+        chunk.map((msg) =>
+          this.translate(msg).catch((error) => ({
+            original: msg,
+            translated: `[Translation failed: ${error.message}]`,
+            fromCache: false,
+          }))
+        )
       );
       results.push(...chunkResults);
     }
@@ -137,7 +156,7 @@ export class TranslationService {
   }
 
   cancelPendingTranslations(): void {
-    this.ollamaService.cancelPendingRequests();
+    this.provider.cancelPendingRequests();
     this.pendingTranslations.clear();
   }
 
