@@ -7,26 +7,23 @@ export function registerToggleCommand(
   context: vscode.ExtensionContext,
   diagnosticsProvider: DiagnosticsProvider
 ): void {
-  const toggleCommand = vscode.commands.registerCommand(
-    'problemTranslator.toggle',
-    async () => {
-      const config = vscode.workspace.getConfiguration('problemTranslator');
-      const currentEnabled = config.get<boolean>('enabled', true);
+  const toggleCommand = vscode.commands.registerCommand('problemTranslator.toggle', async () => {
+    const config = vscode.workspace.getConfiguration('problemTranslator');
+    const currentEnabled = config.get<boolean>('enabled', true);
 
-      await config.update('enabled', !currentEnabled, vscode.ConfigurationTarget.Global);
+    await config.update('enabled', !currentEnabled, vscode.ConfigurationTarget.Global);
 
-      const newState = !currentEnabled ? 'enabled' : 'disabled';
-      vscode.window.showInformationMessage(`Problem Translator: Translation ${newState}`);
+    const newState = !currentEnabled ? 'enabled' : 'disabled';
+    vscode.window.showInformationMessage(`Problem Translator: Translation ${newState}`);
 
-      if (!currentEnabled) {
-        // If enabling, translate all current diagnostics
-        await diagnosticsProvider.translateAllDiagnostics();
-      } else {
-        // If disabling, clear translations
-        diagnosticsProvider.clear();
-      }
+    if (!currentEnabled) {
+      // If enabling, translate all current diagnostics
+      await diagnosticsProvider.translateAllDiagnostics();
+    } else {
+      // If disabling, clear translations
+      diagnosticsProvider.clear();
     }
-  );
+  });
 
   context.subscriptions.push(toggleCommand);
 }

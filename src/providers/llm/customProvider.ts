@@ -40,7 +40,9 @@ export class CustomProvider extends BaseLLMProvider {
   }
 
   async checkConnection(): Promise<boolean> {
-    if (!this.config.url) return false;
+    if (!this.config.url) {
+      return false;
+    }
 
     try {
       const response = await fetch(this.config.url, {
@@ -129,15 +131,23 @@ export class CustomProvider extends BaseLLMProvider {
     if (d.choices && Array.isArray(d.choices)) {
       const choice = d.choices[0] as Record<string, unknown>;
       const message = choice?.message as Record<string, unknown>;
-      if (message?.content) return String(message.content).trim();
+      if (message?.content) {
+        return String(message.content).trim();
+      }
     }
 
     // Try Ollama format
-    if (d.response) return String(d.response).trim();
+    if (d.response) {
+      return String(d.response).trim();
+    }
 
     // Try generic text field
-    if (d.text) return String(d.text).trim();
-    if (d.content) return String(d.content).trim();
+    if (d.text) {
+      return String(d.text).trim();
+    }
+    if (d.content) {
+      return String(d.content).trim();
+    }
 
     throw new LLMProviderError(
       'Could not parse response from custom endpoint',

@@ -47,7 +47,9 @@ export class OpenAIProvider extends BaseLLMProvider {
   }
 
   async checkConnection(): Promise<boolean> {
-    if (!this.config.apiKey) return false;
+    if (!this.config.apiKey) {
+      return false;
+    }
 
     try {
       const response = await fetch(`${this.config.baseUrl}/models`, {

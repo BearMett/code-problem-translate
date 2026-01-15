@@ -29,7 +29,9 @@ export class CacheService {
   }
 
   private loadFromStorage(): void {
-    if (!this.globalState) return;
+    if (!this.globalState) {
+      return;
+    }
 
     const stored = this.globalState.get<Record<string, CacheEntry>>(this.STORAGE_KEY, {});
     this.memoryCache = new Map(Object.entries(stored));
@@ -37,7 +39,9 @@ export class CacheService {
   }
 
   private async saveToStorage(): Promise<void> {
-    if (!this.globalState) return;
+    if (!this.globalState) {
+      return;
+    }
 
     const entries: Record<string, CacheEntry> = {};
     this.memoryCache.forEach((value, key) => {
@@ -104,7 +108,9 @@ export class CacheService {
 
   getHitRate(): number {
     const total = this.stats.hits + this.stats.misses;
-    if (total === 0) return 0;
+    if (total === 0) {
+      return 0;
+    }
     return (this.stats.hits / total) * 100;
   }
 

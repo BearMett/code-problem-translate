@@ -35,7 +35,7 @@ export class DiagnosticsProvider implements vscode.Disposable {
 
     // Listen for diagnostic changes
     this.disposables.push(
-      vscode.languages.onDidChangeDiagnostics(e => {
+      vscode.languages.onDidChangeDiagnostics((e) => {
         if (!this.settings.enabled || !this.settings.enableProblemsPanel) {
           return;
         }
@@ -133,8 +133,10 @@ export class DiagnosticsProvider implements vscode.Disposable {
   /**
    * Filter to get only original (non-translated) diagnostics
    */
-  private filterOriginalDiagnostics(diagnostics: readonly vscode.Diagnostic[]): vscode.Diagnostic[] {
-    return diagnostics.filter(d => {
+  private filterOriginalDiagnostics(
+    diagnostics: readonly vscode.Diagnostic[]
+  ): vscode.Diagnostic[] {
+    return diagnostics.filter((d) => {
       // Skip diagnostics from our own collection
       if (this.isOurDiagnostic(d)) {
         return false;
@@ -142,7 +144,7 @@ export class DiagnosticsProvider implements vscode.Disposable {
 
       // Filter by source
       if (this.settings.sources.length > 0 && d.source) {
-        if (!this.settings.sources.some(s => d.source?.toLowerCase().includes(s.toLowerCase()))) {
+        if (!this.settings.sources.some((s) => d.source?.toLowerCase().includes(s.toLowerCase()))) {
           return false;
         }
       }
@@ -184,9 +186,12 @@ export class DiagnosticsProvider implements vscode.Disposable {
    * Create a fingerprint of diagnostics to detect changes
    */
   private createFingerprint(diagnostics: vscode.Diagnostic[]): string {
-    const parts = diagnostics.map(d =>
-      `${d.range.start.line}:${d.range.start.character}:${d.severity}:${d.source}:${d.message}`
-    ).sort();
+    const parts = diagnostics
+      .map(
+        (d) =>
+          `${d.range.start.line}:${d.range.start.character}:${d.severity}:${d.source}:${d.message}`
+      )
+      .sort();
     return parts.join('|||');
   }
 
@@ -224,11 +229,7 @@ export class DiagnosticsProvider implements vscode.Disposable {
         break;
     }
 
-    const translated = new vscode.Diagnostic(
-      original.range,
-      message,
-      original.severity
-    );
+    const translated = new vscode.Diagnostic(original.range, message, original.severity);
 
     translated.source = original.source ? `${original.source} (translated)` : 'translated';
     translated.code = original.code;
@@ -244,7 +245,9 @@ export class DiagnosticsProvider implements vscode.Disposable {
 
   getTranslation(uri: vscode.Uri, diagnostic: vscode.Diagnostic): string | undefined {
     const uriMap = this.translationMap.get(uri.toString());
-    if (!uriMap) return undefined;
+    if (!uriMap) {
+      return undefined;
+    }
 
     const key = this.getDiagnosticKey(diagnostic);
     return uriMap.get(key)?.translatedMessage;
@@ -259,6 +262,6 @@ export class DiagnosticsProvider implements vscode.Disposable {
 
   dispose(): void {
     this.translatedCollection.dispose();
-    this.disposables.forEach(d => d.dispose());
+    this.disposables.forEach((d) => d.dispose());
   }
 }

@@ -26,8 +26,8 @@ export class TranslatedHoverProvider implements vscode.HoverProvider {
     }
 
     const diagnostics = vscode.languages.getDiagnostics(document.uri);
-    const diagnosticAtPosition = diagnostics.find(d =>
-      d.range.contains(position) && !this.isTranslatedDiagnostic(d)
+    const diagnosticAtPosition = diagnostics.find(
+      (d) => d.range.contains(position) && !this.isTranslatedDiagnostic(d)
     );
 
     if (!diagnosticAtPosition) {
@@ -49,7 +49,9 @@ export class TranslatedHoverProvider implements vscode.HoverProvider {
       content.appendMarkdown(`**Original:**\n\`\`\`\n${diagnosticAtPosition.message}\n\`\`\`\n\n`);
 
       // Translated message
-      content.appendMarkdown(`**${this.settings.targetLanguage}:**\n\`\`\`\n${translation}\n\`\`\`\n\n`);
+      content.appendMarkdown(
+        `**${this.settings.targetLanguage}:**\n\`\`\`\n${translation}\n\`\`\`\n\n`
+      );
 
       // Add source and code info
       if (diagnosticAtPosition.source || diagnosticAtPosition.code) {
@@ -58,9 +60,10 @@ export class TranslatedHoverProvider implements vscode.HoverProvider {
           content.appendMarkdown(`*Source: ${diagnosticAtPosition.source}*`);
         }
         if (diagnosticAtPosition.code) {
-          const codeStr = typeof diagnosticAtPosition.code === 'object'
-            ? diagnosticAtPosition.code.value
-            : diagnosticAtPosition.code;
+          const codeStr =
+            typeof diagnosticAtPosition.code === 'object'
+              ? diagnosticAtPosition.code.value
+              : diagnosticAtPosition.code;
           content.appendMarkdown(` | *Code: ${codeStr}*`);
         }
       }

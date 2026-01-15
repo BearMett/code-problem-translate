@@ -45,7 +45,9 @@ export class ClaudeProvider extends BaseLLMProvider {
   }
 
   async checkConnection(): Promise<boolean> {
-    if (!this.config.apiKey) return false;
+    if (!this.config.apiKey) {
+      return false;
+    }
 
     try {
       // Claude doesn't have a health check endpoint, so we make a minimal request

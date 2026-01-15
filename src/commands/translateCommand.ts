@@ -65,7 +65,9 @@ export function registerTranslateCommand(
             translationService.cancelPendingTranslations();
           });
 
-          progress.report({ message: `Translating diagnostics with ${providerInfo.displayName}...` });
+          progress.report({
+            message: `Translating diagnostics with ${providerInfo.displayName}...`,
+          });
 
           try {
             await diagnosticsProvider.translateAllDiagnostics();

@@ -3,7 +3,7 @@
   "displayName": "Problem Translator",
   "description": "VS Code Problems 패널의 에러 메시지를 다양한 LLM(Ollama, OpenAI, Claude, Gemini)을 통해 번역합니다",
   "version": "0.1.0",
-  "publisher": "problem-translator",
+  "publisher": "Bearmett",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -56,7 +56,13 @@
         "problemTranslator.provider": {
           "type": "string",
           "default": "ollama",
-          "enum": ["ollama", "openai", "claude", "gemini", "custom"],
+          "enum": [
+            "ollama",
+            "openai",
+            "claude",
+            "gemini",
+            "custom"
+          ],
           "enumDescriptions": [
             "Ollama (Local LLM) - Free, runs locally",
             "OpenAI (GPT-4o, GPT-4o-mini) - Requires API key",
@@ -91,7 +97,16 @@
         "problemTranslator.openai.model": {
           "type": "string",
           "default": "gpt-5-nano",
-          "enum": ["gpt-5.2", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4o-mini"],
+          "enum": [
+            "gpt-5.2",
+            "gpt-5-mini",
+            "gpt-5-nano",
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "gpt-4o",
+            "gpt-4o-mini"
+          ],
           "enumDescriptions": [
             "GPT-5.2 - Most capable, reasoning model",
             "GPT-5 mini - Fast, well-defined tasks",
@@ -122,7 +137,12 @@
         "problemTranslator.claude.model": {
           "type": "string",
           "default": "claude-haiku-4-5-20251001",
-          "enum": ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250929", "claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022"],
+          "enum": [
+            "claude-haiku-4-5-20251001",
+            "claude-sonnet-4-5-20250929",
+            "claude-3-5-haiku-20241022",
+            "claude-3-5-sonnet-20241022"
+          ],
           "enumDescriptions": [
             "Claude Haiku 4.5 - Fastest, most affordable",
             "Claude Sonnet 4.5 - Best balance of speed & capability",
@@ -139,7 +159,10 @@
         "problemTranslator.gemini.model": {
           "type": "string",
           "default": "gemini-2.5-flash",
-          "enum": ["gemini-2.5-flash", "gemini-2.5-pro"],
+          "enum": [
+            "gemini-2.5-flash",
+            "gemini-2.5-pro"
+          ],
           "enumDescriptions": [
             "Gemini 2.5 Flash - Fast, best price-performance (Recommended)",
             "Gemini 2.5 Pro - Most advanced reasoning"
@@ -164,7 +187,10 @@
         "problemTranslator.custom.requestFormat": {
           "type": "string",
           "default": "openai",
-          "enum": ["openai", "ollama"],
+          "enum": [
+            "openai",
+            "ollama"
+          ],
           "enumDescriptions": [
             "OpenAI-compatible API format (chat/completions)",
             "Ollama-compatible API format (api/generate)"
@@ -268,6 +294,7 @@
     "build": "node esbuild.config.js",
     "watch": "node esbuild.config.js --watch",
     "lint": "eslint src --ext ts",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "vscode-test"
   },
   "devDependencies": {
@@ -279,11 +306,14 @@
     "@vscode/test-electron": "^2.3.8",
     "esbuild": "^0.19.8",
     "eslint": "^8.55.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.0",
     "typescript": "^5.3.2"
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/BearMett/code-problem-translate"
   },
   "license": "MIT"
 }
