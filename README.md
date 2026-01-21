@@ -1,3 +1,5 @@
+[English](doc/README.en.md) | **한국어**
+
 # Problem Translator
 
 VS Code Problems 패널의 에러/경고 메시지를 다양한 LLM을 통해 원하는 언어로 번역합니다.
@@ -5,10 +7,7 @@ VS Code Problems 패널의 에러/경고 메시지를 다양한 LLM을 통해 �
 ## Features
 
 - **Problems 패널 번역**: 에러, 경고, 정보, 힌트 메시지를 실시간으로 번역
-- **Hover 번역**: 에디터에서 문제가 있는 코드에 마우스를 올리면 번역 표시
 - **다중 LLM 지원**: Ollama, OpenAI, Claude, Gemini, Custom endpoint 지원
-- **캐시 시스템**: 번역 결과를 캐시하여 중복 API 호출 방지
-- **필터링**: 소스 및 심각도별 번역 대상 필터링
 
 ## Installation
 
@@ -44,7 +43,7 @@ code --install-extension problem-translator-0.1.0.vsix
 }
 ```
 
-**권장 모델**: `qwen2.5:3b`, `qwen2.5:7b`, `llama3.2:3b`
+**권장 모델**: `qwen2.5:3b`, `qwen2.5:7b`, `llama3.2:3b`, `exaone3.5:7.8b`
 
 ### OpenAI
 
