@@ -4,7 +4,7 @@ import {
   GenerateOptions,
   ProviderCapabilities,
   ProviderConfigMap,
-} from './types.js';
+} from './types';
 
 export abstract class BaseLLMProvider implements LLMProvider {
   abstract readonly name: LLMProviderType;
