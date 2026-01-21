@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { DiagnosticsProvider } from '../providers/diagnosticsProvider.js';
-import { TranslationService } from '../services/translationService.js';
+import { DiagnosticsProvider } from '../providers/diagnosticsProvider';
+import { TranslationService } from '../services/translationService';
 
 export function registerTranslateCommand(
   context: vscode.ExtensionContext,

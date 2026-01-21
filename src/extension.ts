@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
-import { TranslationService } from './services/translationService.js';
-import { DiagnosticsProvider } from './providers/diagnosticsProvider.js';
-import { TranslatedHoverProvider } from './providers/hoverProvider.js';
-import { registerTranslateCommand } from './commands/translateCommand.js';
+import { TranslationService } from './services/translationService';
+import { DiagnosticsProvider } from './providers/diagnosticsProvider';
+import { TranslatedHoverProvider } from './providers/hoverProvider';
+import { registerTranslateCommand } from './commands/translateCommand';
 import {
   registerToggleCommand,
   registerClearCacheCommand,
   registerShowStatusCommand,
-} from './commands/toggleCommand.js';
-import { getSettings, onSettingsChanged } from './config/settings.js';
+} from './commands/toggleCommand';
+import { getSettings, onSettingsChanged } from './config/settings';
 
 let translationService: TranslationService;
 let diagnosticsProvider: DiagnosticsProvider;

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { DiagnosticsProvider } from '../providers/diagnosticsProvider.js';
-import { TranslationService } from '../services/translationService.js';
-import { getSettings } from '../config/settings.js';
+import { DiagnosticsProvider } from '../providers/diagnosticsProvider';
+import { TranslationService } from '../services/translationService';
+import { getSettings } from '../config/settings';
 
 export function registerToggleCommand(
   context: vscode.ExtensionContext,

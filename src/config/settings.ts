@@ -7,7 +7,7 @@ import type {
   ClaudeConfig,
   GeminiConfig,
   CustomConfig,
-} from '../providers/llm/types.js';
+} from '../providers/llm/types';
 
 export interface ExtensionSettings {
   enabled: boolean;

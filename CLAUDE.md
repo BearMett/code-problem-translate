@@ -61,11 +61,11 @@ Press F5 in VS Code to launch extension development host. The `watch` task runs 
 - **No barrel exports**: Do not use `index.ts` files for re-exporting. Import directly from the source file.
   ```typescript
   // Good
-  import { LLMProvider } from './providers/llm/types.js';
-  import { OllamaProvider } from './providers/llm/ollamaProvider.js';
+  import { LLMProvider } from './providers/llm/types';
+  import { OllamaProvider } from './providers/llm/ollamaProvider';
 
   // Bad
-  import { LLMProvider, OllamaProvider } from './providers/llm/index.js';
+  import { LLMProvider, OllamaProvider } from './providers/llm/index';
   ```
 
 ## Notes

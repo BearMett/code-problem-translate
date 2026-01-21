@@ -1,9 +1,9 @@
-import { LLMProvider, LLMProviderType, ProviderConfigMap } from './types.js';
-import { OllamaProvider } from './ollamaProvider.js';
-import { OpenAIProvider } from './openaiProvider.js';
-import { ClaudeProvider } from './claudeProvider.js';
-import { GeminiProvider } from './geminiProvider.js';
-import { CustomProvider } from './customProvider.js';
+import { LLMProvider, LLMProviderType, ProviderConfigMap } from './types';
+import { OllamaProvider } from './ollamaProvider';
+import { OpenAIProvider } from './openaiProvider';
+import { ClaudeProvider } from './claudeProvider';
+import { GeminiProvider } from './geminiProvider';
+import { CustomProvider } from './customProvider';
 
 export class LLMProviderFactory {
   private static providers: Map<LLMProviderType, LLMProvider> = new Map();

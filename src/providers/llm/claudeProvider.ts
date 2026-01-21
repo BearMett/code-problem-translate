@@ -1,4 +1,4 @@
-import { BaseLLMProvider } from './baseLLMProvider.js';
+import { BaseLLMProvider } from './baseLLMProvider';
 import {
   ClaudeConfig,
   GenerateOptions,
@@ -6,7 +6,7 @@ import {
   LLMProviderError,
   ProviderConfigMap,
   LLMProviderType,
-} from './types.js';
+} from './types';
 
 interface ClaudeMessageResponse {
   content: Array<{

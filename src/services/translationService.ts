@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { LLMProvider } from '../providers/llm/types.js';
-import { LLMProviderFactory } from '../providers/llm/providerFactory.js';
-import { CacheService } from './cacheService.js';
-import { getSettings, getCurrentProviderConfig, ExtensionSettings } from '../config/settings.js';
+import { LLMProvider } from '../providers/llm/types';
+import { LLMProviderFactory } from '../providers/llm/providerFactory';
+import { CacheService } from './cacheService';
+import { getSettings, getCurrentProviderConfig, ExtensionSettings } from '../config/settings';
 
 export interface TranslationResult {
   original: string;

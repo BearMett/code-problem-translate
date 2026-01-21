@@ -1,4 +1,4 @@
-import { BaseLLMProvider } from './baseLLMProvider.js';
+import { BaseLLMProvider } from './baseLLMProvider';
 import {
   OllamaConfig,
   ModelInfo,
@@ -7,7 +7,7 @@ import {
   LLMProviderError,
   ProviderConfigMap,
   LLMProviderType,
-} from './types.js';
+} from './types';
 
 interface OllamaGenerateResponse {
   model: string;

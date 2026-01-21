@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { TranslationService } from '../services/translationService.js';
-import { getSettings, ExtensionSettings } from '../config/settings.js';
-import { debounce } from '../utils/debounce.js';
+import { TranslationService } from '../services/translationService';
+import { getSettings, ExtensionSettings } from '../config/settings';
+import { debounce } from '../utils/debounce';
 
 interface TranslatedDiagnostic {
   original: vscode.Diagnostic;

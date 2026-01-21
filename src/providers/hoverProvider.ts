@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { TranslationService } from '../services/translationService.js';
-import { getSettings, ExtensionSettings } from '../config/settings.js';
+import { TranslationService } from '../services/translationService';
+import { getSettings, ExtensionSettings } from '../config/settings';
 
 export class TranslatedHoverProvider implements vscode.HoverProvider {
   private translationService: TranslationService;
